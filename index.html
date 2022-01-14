@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit</title>
+  <meta name="description" content="Happy writing">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <textarea class="editor" autofocus></textarea>
+  <span class="words">Happy writing</span>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var editor = document.querySelector('.editor')
+      var words = document.querySelector('.words')
+      var saved = localStorage.getItem('text')
+      editor.value = saved
+
+      function inform (str) {
+        str = str.replace(/[ ]{2,}/gi, ' ') // two or more spaces
+        str = str.replace(/\n /, '\n') // exclude newline with a start spacing
+        str = str.split(/\s+/).filter(function (str) { return str !== '' })
+        if (!str.length) return 'Happy writing'
+        return str.length + ' words'
+      }
+
+      words.innerText = inform(saved)
+
+      editor.addEventListener('keyup', function (event) {
+        words.innerText = inform(editor.value)
+      })
+
+      editor.addEventListener('keydown', function (event) {
+        if (event.keyCode === 13) {
+          var value = editor.value
+          var pos = editor.selectionStart
+          var prev = value.substring(0, pos).split('\n')
+          if (prev[prev.length - 1].startsWith('- ')) {
+            if (prev[prev.length - 1] === '- ') {
+              editor.value = value.substring(0, pos - 2) + value.substring(editor.selectionEnd).substring()
+              editor.setSelectionRange(pos - 1, pos - 1)
+            } else {
+              editor.value = value.substring(0, pos) + '\n- ' + value.substring(editor.selectionEnd).substring()
+              editor.setSelectionRange(pos + 3, pos + 3)
+            }
+            event.preventDefault()
+
+          }
+        }
+        localStorage.setItem('text', editor.value)
+      })
+    }, false)
+  </script>
+</body>
+</html>
