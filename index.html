@@ -10,32 +10,48 @@
 <body>
   <!-- https://github.com/antontrollback/edit -->
   <textarea class="editor" autofocus></textarea>
-  <span class="words">Happy writing</span>
+  <textarea class="editor clone" autofocus readonly></textarea>
 
   <script>
+    function log (str) {
+      var title = 'Edit: '
+      var message = 'Happy writing'
+      if (!str) return title + message
+      str = str.replace(/[ ]{2,}/gi, ' ') // two or more spaces
+      str = str.replace(/\n /, '\n') // exclude newline with a start spacing
+      str = str.split(/\s+/).filter(function (str) { return str !== '' })
+      if (!str.length) return title + message
+      return title + str.length + ' word' + (str.length > 1 ? 's' : '')
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
+      var root = document.documentElement
       var editor = document.querySelector('.editor')
+      var clone = document.querySelector('.clone')
       var words = document.querySelector('.words')
       var saved = localStorage.getItem('text')
+
+      // Load
       editor.value = saved
+      clone.value = saved
 
-      function inform (str) {
-        if (!str) return 'Happy writing'
-        str = str.replace(/[ ]{2,}/gi, ' ') // two or more spaces
-        str = str.replace(/\n /, '\n') // exclude newline with a start spacing
-        str = str.split(/\s+/).filter(function (str) { return str !== '' })
-        if (!str.length) return 'Happy writing'
-        return str.length + ' words'
-      }
+      // Save
+      editor.addEventListener('keydown', () => localStorage.setItem('text', editor.value))
 
-      words.innerText = inform(saved)
+      // Measuse
+      editor.style.height = clone.scrollHeight + 'px'
+      editor.addEventListener('input', function () {
+        clone.value = editor.value
+        editor.style.height = clone.scrollHeight + 'px'
+      }, false)
 
-      editor.addEventListener('keyup', function (event) {
-        words.innerText = inform(editor.value)
-      })
+      // Log
+      document.title = log(saved)
+      editor.addEventListener('input', () => document.title = log(editor.value))
 
+      // Automatic list formatting
       editor.addEventListener('keydown', function (event) {
-        if (event.keyCode === 13) {
+        if (event.key === 'Enter') {
           var value = editor.value
           var pos = editor.selectionStart
           var prev = value.substring(0, pos).split('\n')
@@ -48,10 +64,19 @@
               editor.setSelectionRange(pos + 3, pos + 3)
             }
             event.preventDefault()
-
           }
         }
-        localStorage.setItem('text', editor.value)
+      })
+
+      // Prevent an initial animation caused by autofocus
+      editor.addEventListener('focus', () => root.style = 'scroll-behavior: smooth')
+
+      // Prevent scroll animations on pasting and navigating
+      editor.addEventListener('keyup', function (event) {
+        if (event.key === 'Meta') root.style = 'scroll-behavior: smooth'
+      })
+      editor.addEventListener('keydown', function (event) {
+        if (event.key === 'Meta') root.style = 'scroll-behavior: auto'
       })
     }, false)
   </script>
